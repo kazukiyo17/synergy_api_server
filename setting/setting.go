@@ -23,12 +23,12 @@ type Server struct {
 var ServerSetting = &Server{}
 
 type Database struct {
-	Type        string
-	User        string
-	Password    string
-	Host        string
-	Name        string
-	TablePrefix string
+	Type     string
+	User     string
+	Password string
+	Host     string
+	Port     string
+	Name     string
 }
 
 var DatabaseSetting = &Database{}
@@ -43,12 +43,29 @@ type Redis struct {
 
 var RedisSetting = &Redis{}
 
+type RedisMQ struct {
+	Host        string
+	Password    string
+	MaxIdle     int
+	MaxActive   int
+	IdleTimeout time.Duration
+}
+
+var RedisMQSetting = &RedisMQ{}
+
+type Nlp struct {
+	SecretID  string
+	SecretKey string
+}
+
+var NlpSetting = &Nlp{}
+
 var cfg *ini.File
 
 // Setup initialize the configuration instance
 func Setup() {
 	var err error
-	cfg, err = ini.Load("conf/app.ini")
+	cfg, err = ini.Load("app.ini")
 	if err != nil {
 		log.Fatalf("setting.Setup, fail to parse 'conf/app.ini': %v", err)
 	}

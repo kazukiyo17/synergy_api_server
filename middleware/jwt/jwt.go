@@ -4,7 +4,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	e "github.com/kazukiyo17/fake_buddha_server/common/errcode"
-	"github.com/kazukiyo17/fake_buddha_server/utils"
+	jwt2 "github.com/kazukiyo17/fake_buddha_server/utils/jwt"
 	"net/http"
 )
 
@@ -18,7 +18,7 @@ func JWT() gin.HandlerFunc {
 		if token == "" {
 			code = e.INVALID_PARAMS
 		} else {
-			_, err := utils.ParseToken(token)
+			_, err := jwt2.ParseToken(token)
 			if err != nil {
 				switch err.(*jwt.ValidationError).Errors {
 				case jwt.ValidationErrorExpired:

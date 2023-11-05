@@ -1,4 +1,4 @@
-package scene
+package scene_service
 
 import (
 	"encoding/json"
@@ -21,17 +21,35 @@ func (s *Scene) GetSceneInfoById(sceneId int64) (*model.Scene, error) {
 		if err != nil {
 			//logging.Info(err)
 		} else {
-			json.Unmarshal(data, &cacheScene)
+			err = json.Unmarshal(data, &cacheScene)
+			if err != nil {
+				return nil, err
+			}
 			return cacheScene, nil
 		}
 	}
-	// 缓存中没有
+	// 缓存中没有,从数据库中获取
 	scene, err := model.GetSceneById(sceneId)
 	if err != nil {
 		return nil, err
 	}
 	// 存入缓存
 	data, _ := json.Marshal(scene)
-	redis.Set(sceneIdStr, data)
+	err = redis.Set(sceneIdStr, data, 3600)
+	if err != nil {
+		return nil, err
+	}
 	return scene, nil
+}
+
+// CheckSubScene 检查子场景是否都存在
+func (s *Scene) CheckSubScene(sceneId int64) (bool, error) {
+	scene, err := s.GetSceneInfoById(sceneId)
+	if err != nil {
+		return false, err
+	}
+	if scene == nil {
+		return false, nil
+	}
+	return true, nil
 }
