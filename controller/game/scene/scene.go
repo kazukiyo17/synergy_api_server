@@ -2,44 +2,34 @@ package scene
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/kazukiyo17/fake_buddha_server/common"
-	"github.com/kazukiyo17/fake_buddha_server/service/scene_service"
+	"github.com/kazukiyo17/synergy_api_server/service/scene_service"
 	"github.com/spf13/cast"
-	"net/http"
+	"strings"
 )
 
-type SceneInfoOut struct {
-	SceneID int64  `json:"scene_id"` // 剧本ID
-	Url     string `json:"url"`      // 存储地址
-	UserID  int64  `json:"user_id"`  // 用户ID
-}
-
-func SceneInfo(c *gin.Context) {
-	// 参数校验
-	var sceneId int64 = cast.ToInt64(c.Query("activity_id"))
-	if sceneId == 0 {
-		common.SendParamError(c, "activityId")
-	}
-
-	// 查询信息
-	sceneService := scene_service.Scene{
-		ID: sceneId,
-	}
-	scene, err := sceneService.GetSceneInfoById(sceneId)
-	if err != nil {
-		common.SendParamError(c, err.Error())
+func Check(c *gin.Context) {
+	sceneUrl := c.Query("url")
+	if sceneUrl == "" {
+		c.JSON(-1, gin.H{"message": "url is empty"})
 		return
 	}
-
-	// 返回信息
-	c.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "success",
-		"data": SceneInfoOut{
-			SceneID: scene.ID,
-			Url:     scene.Url,
-			UserID:  scene.CreatorUserId,
-		},
-	})
-
+	sceneIdStr := sceneUrl[strings.LastIndex(sceneUrl, "/")+1 : strings.LastIndex(sceneUrl, ".")]
+	// 如果为start.txt, 或end.txt, 直接返回
+	if sceneIdStr == "start" || sceneIdStr == "end" {
+		c.JSON(200, gin.H{"message": "success"})
+		return
+	}
+	// 是否为数字
+	_, err := cast.ToInt64E(sceneIdStr)
+	if err != nil {
+		c.JSON(-1, gin.H{"message": "sceneId is invalid"})
+		return
+	}
+	// 生成
+	err = scene_service.Check(sceneIdStr)
+	if err != nil {
+		c.JSON(-1, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"message": "success"})
 }

@@ -1,32 +1,84 @@
 package auth_service
 
 import (
-	"github.com/kazukiyo17/fake_buddha_server/controller/user"
-	"github.com/kazukiyo17/fake_buddha_server/utils/redis"
+	"github.com/kazukiyo17/synergy_api_server/model/auth"
+	"github.com/kazukiyo17/synergy_api_server/redis"
+	"github.com/kazukiyo17/synergy_api_server/utils/jwt"
 )
 
 type Auth struct {
-	userId int64
-	token  string
+	Username string
+	Password string
+	Token    string
 }
 
-func (a *Auth) C  eck() bool {
-	return redis.Exists(a.token)
+// Check 检查用户登录信息
+func (a *Auth) Check() (bool, error) {
+	// 从redis中获取token
+	rKey := "token:" + a.Token
+	if redis.Exists(rKey) {
+		// 已登陆
+		return true, nil
+	}
+	// 未登陆
+	return false, nil
 }
 
-func (a *Auth) Save() bool {
-	err := redis.Set(a.token, a.userId, 3600)
+func (a *Auth) Login() (string, error) {
+	// 检查Username Password是否正确
+	isExist, err := auth.CheckAuth(a.Username, a.Password)
 	if err != nil {
-		return false
+		return "", err
 	}
-	return true
+	if !isExist {
+		return "", nil
+	}
+	// 生成token
+	token, err := jwt.GenerateToken(a.Username, a.Password)
+	if err != nil {
+		return "", err
+	}
+	// 将token写入redis, 3天过期
+	rKey := "token:" + token
+	err = redis.Set(rKey, a.Username, 3)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
-func (a *Auth) Login(info user.Info, token string) (string, error) {
-	// 检查redis
-	if redis.Exists(token) {
-		// 重置过期时间
-		redis.Set(token, a.userId, 3600)
-		return token, nil
+// IsUsernameExist 检查用户名是否存在
+func (a *Auth) IsUsernameExist() (bool, error) {
+	rkey := "username:" + a.Username
+	if redis.Exists(rkey) {
+		return true, nil
 	}
+	exist, err := auth.CheckUsername(a.Username)
+	if err != nil {
+		return true, err
+	}
+	return exist, nil
+}
+
+// Signup 注册用户
+func (a *Auth) Signup() error {
+	// 将用户信息写入数据库
+	err := auth.AddAuth(a.Username, a.Password)
+	if err != nil {
+		return err
+	}
+	// 将用户名写入redis
+	rKey := "username:" + a.Username
+	err = redis.Set(rKey, a.Username, 3)
+	return nil
+}
+
+// Logout 删除用户
+func (a *Auth) Logout() error {
+	// 删除redis中的token
+	err := jwt.RemoveToken(a.Token)
+	if err != nil {
+		return err
+	}
+	return nil
 }

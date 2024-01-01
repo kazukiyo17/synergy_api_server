@@ -1,55 +1,94 @@
 package scene_service
 
 import (
-	"encoding/json"
-	"github.com/kazukiyo17/fake_buddha_server/model"
-	"github.com/kazukiyo17/fake_buddha_server/utils/redis"
-	"github.com/spf13/cast"
+	"github.com/kazukiyo17/synergy_api_server/model/scene"
+	"github.com/kazukiyo17/synergy_api_server/redis"
+	"github.com/kazukiyo17/synergy_api_server/redis_mq"
+	"log"
+	"strings"
 )
 
-type Scene struct {
-	ID            int64  `json:"id"`
-	Url           string `json:"url"`
-	CreatorUserId int64  `json:"creator_user_id"`
-}
+const (
+	SCENE_EXPIRE_TIME = 1
+)
 
-func (s *Scene) GetSceneInfoById(sceneId int64) (*model.Scene, error) {
-	var cacheScene *model.Scene
-	sceneIdStr := cast.ToString(sceneId)
-	if redis.Exists(sceneIdStr) {
-		data, err := redis.Get(sceneIdStr)
-		if err != nil {
-			//logging.Info(err)
-		} else {
-			err = json.Unmarshal(data, &cacheScene)
-			if err != nil {
-				return nil, err
-			}
-			return cacheScene, nil
-		}
+// hasGenerated 是否已经生成
+func hasGenerated(sceneId string) (bool, error) {
+	// 1 查询redis
+	rKey := "cos:" + sceneId
+	if redis.Exists(rKey) {
+		return true, nil
 	}
-	// 缓存中没有,从数据库中获取
-	scene, err := model.GetSceneById(sceneId)
-	if err != nil {
-		return nil, err
+	// 2. 查redis_mq
+	if redis_mq.Check(sceneId) {
+		return true, nil
 	}
-	// 存入缓存
-	data, _ := json.Marshal(scene)
-	err = redis.Set(sceneIdStr, data, 3600)
-	if err != nil {
-		return nil, err
-	}
-	return scene, nil
-}
-
-// CheckSubScene 检查子场景是否都存在
-func (s *Scene) CheckSubScene(sceneId int64) (bool, error) {
-	scene, err := s.GetSceneInfoById(sceneId)
+	// 3. 查询db
+	cosUrl, err := scene.GetCosUrlBySceneId(sceneId)
 	if err != nil {
 		return false, err
 	}
-	if scene == nil {
+	if cosUrl == "" {
 		return false, nil
 	}
-	return true, nil
+	// 2. 存入redis
+	err = redis.Set(rKey, cosUrl, SCENE_EXPIRE_TIME)
+	if err != nil {
+		log.Printf("redis set error: %v", err)
+	}
+	return true, err
+}
+
+// produceChildScene 加入队列
+func produceChildScene(sceneId string, childSceneId string) {
+	redis_mq.Produce(childSceneId, sceneId)
+}
+
+// getChildSceneIds 获取子场景Id
+func getChildSceneIds(sceneId string) ([]string, error) {
+	childSceneIds := make([]string, 0)
+	// 从redis中获取子场景
+	rKey := "child:" + sceneId
+	if redis.Exists(rKey) {
+		childSceneIdsStr, err := redis.Get(rKey)
+		if err == nil {
+			childSceneIds = strings.Split(childSceneIdsStr, ",")
+		}
+	} else {
+		sceneIds, err := scene.GetSceneIdByParentSceneId(sceneId)
+		if err != nil {
+			return make([]string, 0), err
+		}
+		childSceneIds = append(sceneIds, childSceneIds...)
+		// 保存到redis
+		childSceneIdsStr := strings.Join(childSceneIds, ",")
+		err = redis.Set(rKey, childSceneIdsStr, SCENE_EXPIRE_TIME)
+	}
+	return childSceneIds, nil
+}
+
+// Check 生成孙子剧本
+func Check(sceneId string) error {
+	// 1. 获取子场景
+	childSceneIds, err := getChildSceneIds(sceneId)
+	if err != nil {
+		return err
+	}
+	for _, childSceneId := range childSceneIds {
+		grandChildSceneIds, err := getChildSceneIds(childSceneId)
+		if err != nil {
+			continue
+		}
+		for _, grandChildSceneId := range grandChildSceneIds {
+			generated, err := hasGenerated(grandChildSceneId)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			if generated {
+				continue
+			}
+			produceChildScene(childSceneId, grandChildSceneId)
+		}
+	}
+	return nil
 }

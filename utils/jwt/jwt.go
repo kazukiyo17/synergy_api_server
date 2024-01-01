@@ -2,7 +2,12 @@ package jwt
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"github.com/kazukiyo17/synergy_api_server/redis"
 	"time"
+)
+
+const (
+	TOKEN_EXPIRE_TIME = 3
 )
 
 var jwtSecret []byte
@@ -43,4 +48,29 @@ func ParseToken(token string) (*Claims, error) {
 		}
 	}
 	return nil, err
+}
+
+func AddToken(username, password string) (token string) {
+	// 生成token
+	token, err := GenerateToken(username, password)
+	if err != nil {
+		panic(err)
+	}
+	// 将token写入redis, 3天过期
+	err = redis.Set(token, username, TOKEN_EXPIRE_TIME)
+	if err != nil {
+		panic(err)
+	}
+	return token
+}
+
+func RemoveToken(token string) (err error) {
+	res, err := redis.Delete(token)
+	if err != nil {
+		panic(err)
+	}
+	if !res {
+		panic("token not exist")
+	}
+	return err
 }
