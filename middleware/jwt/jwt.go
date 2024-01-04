@@ -15,7 +15,12 @@ func JWT() gin.HandlerFunc {
 		var data interface{}
 
 		code = e.SUCCESS
-		token := c.Query("token")
+		//token := c.Query("token")
+		// 从cookie中获取token
+		token, err := c.Cookie("token")
+		if err != nil {
+			code = e.ERROR_AUTH_CHECK_TOKEN_FAIL
+		}
 		if token == "" {
 			code = e.INVALID_PARAMS
 		} else {

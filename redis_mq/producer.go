@@ -2,8 +2,8 @@ package redis_mq
 
 import "fmt"
 
-func Produce(chooseId string, sceneId string) {
-	msg, err := redisMQClient.PutMsg(chooseId, sceneId)
+func Produce(chooseId, username string) {
+	msg, err := redisMQClient.PutMsg(chooseId, username)
 	if err != nil {
 		fmt.Println("PutMsg err:", err)
 		return

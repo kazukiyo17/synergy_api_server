@@ -40,8 +40,8 @@ func hasGenerated(sceneId string) (bool, error) {
 }
 
 // produceChildScene 加入队列
-func produceChildScene(sceneId string, childSceneId string) {
-	redis_mq.Produce(childSceneId, sceneId)
+func produceChildScene(sceneId, childSceneId, username string) {
+	redis_mq.Produce(childSceneId, username)
 }
 
 // getChildSceneIds 获取子场景Id
@@ -67,8 +67,30 @@ func getChildSceneIds(sceneId string) ([]string, error) {
 	return childSceneIds, nil
 }
 
+func getSceneCreator(sceneId string) (string, error) {
+	rKey := "creator:" + sceneId
+	if redis.Exists(rKey) {
+		return redis.Get(rKey)
+	} else {
+		creator, err := scene.GetCreatorBySceneId(sceneId)
+		if err != nil {
+			return "", err
+		}
+		err = redis.Set(rKey, creator, SCENE_EXPIRE_TIME)
+		return creator, err
+	}
+}
+
+func CheckSceneCreator(sceneId, username string) bool {
+	creator, err := getSceneCreator(sceneId)
+	if err != nil || creator != username {
+		return false
+	}
+	return true
+}
+
 // Check 生成孙子剧本
-func Check(sceneId string) error {
+func Check(sceneId, username string) error {
 	// 1. 获取子场景
 	childSceneIds, err := getChildSceneIds(sceneId)
 	if err != nil {
@@ -87,7 +109,7 @@ func Check(sceneId string) error {
 			if generated {
 				continue
 			}
-			produceChildScene(childSceneId, grandChildSceneId)
+			produceChildScene(childSceneId, grandChildSceneId, username)
 		}
 	}
 	return nil
