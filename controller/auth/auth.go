@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	e "github.com/kazukiyo17/synergy_api_server/common/errcode"
 	"github.com/kazukiyo17/synergy_api_server/common/response"
+	"github.com/kazukiyo17/synergy_api_server/redis"
 	"github.com/kazukiyo17/synergy_api_server/service/auth_service"
 	"github.com/kazukiyo17/synergy_api_server/setting"
 	jwtTokenUtil "github.com/kazukiyo17/synergy_api_server/utils/jwt"
@@ -121,6 +122,7 @@ func Login(c *gin.Context) {
 	}
 	// token 写入cookie, 3天过期
 	rKey := "token:" + token
-	c.SetCookie(rKey, "rKey", 3600*24, "/", setting.ServerSetting.Domain, false, true)
+	err = redis.Set(rKey, username, 3)
+	c.SetCookie("token", token, 3600*24, "/", setting.ServerSetting.Domain, false, true)
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }

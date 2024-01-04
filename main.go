@@ -22,10 +22,10 @@ func main() {
 	routersInit := router.SetupRouter()
 	server := &http.Server{
 		Handler: routersInit,
-		Addr:    ":8080",
+		Addr:    ":8081",
 	}
 
-	log.Printf("[info] start http server listening 8080")
+	log.Printf("[info] start http server listening 8081")
 
 	err := server.ListenAndServe()
 	if err != nil {
