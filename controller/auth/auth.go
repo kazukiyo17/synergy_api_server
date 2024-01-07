@@ -11,6 +11,7 @@ import (
 	"github.com/kazukiyo17/synergy_api_server/utils/jwt"
 	"log"
 	"net/http"
+	"time"
 )
 
 type auth struct {
@@ -100,6 +101,14 @@ func Login(c *gin.Context) {
 		appG.Response(http.StatusOK, e.SUCCESS, nil)
 		return
 	}
-	c.SetCookie("token", token, 3600*24, "/", setting.ServerSetting.Domain, false, true)
+	//c.SetCookie("token", token, 3600*24, "/", "", false, true)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		Expires:  time.Now().Add(24 * time.Hour),
+		Secure:   false,
+		HttpOnly: true,
+	})
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }
