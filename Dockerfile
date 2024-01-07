@@ -5,5 +5,5 @@ WORKDIR $GOPATH/src/synergy_api_server
 COPY . $GOPATH/src/synergy_api_server
 RUN go build .
 
-EXPOSE 8081
+EXPOSE 443
 ENTRYPOINT ["./synergy_api_server"]

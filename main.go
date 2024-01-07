@@ -22,10 +22,10 @@ func main() {
 	routersInit := router.SetupRouter()
 	server := &http.Server{
 		Handler: routersInit,
-		Addr:    ":8081",
+		Addr:    ":443",
 	}
 
-	log.Printf("[info] start http server listening 8081")
+	log.Printf("[info] start http server listening 443")
 
 	err := server.ListenAndServe()
 	if err != nil {
