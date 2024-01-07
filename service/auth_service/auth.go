@@ -24,27 +24,10 @@ func (a *Auth) Check() (bool, error) {
 	return false, nil
 }
 
-func (a *Auth) Login() (string, error) {
+func (a *Auth) Login() (bool, error) {
 	// 检查Username Password是否正确
-	isExist, err := auth.CheckAuth(a.Username, a.Password)
-	if err != nil {
-		return "", err
-	}
-	if !isExist {
-		return "", nil
-	}
-	// 生成token
-	token, err := jwt.GenerateToken(a.Username, a.Password)
-	if err != nil {
-		return "", err
-	}
-	// 将token写入redis, 3天过期
-	rKey := "token:" + token
-	err = redis.Set(rKey, a.Username, 3)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
+	checkSuccess, err := auth.CheckAuth(a.Username, a.Password)
+	return checkSuccess, err
 }
 
 // IsUsernameExist 检查用户名是否存在

@@ -13,7 +13,10 @@ import (
 func init() {
 	setting.Setup()
 	redis_mq.Setup()
-	redis.Setup()
+	err := redis.Setup()
+	if err != nil {
+		log.Fatalf("redis setup error: %v", err)
+	}
 	model.Setup()
 }
 

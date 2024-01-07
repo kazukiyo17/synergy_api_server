@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/kazukiyo17/synergy_api_server/setting"
+	"log"
 	"time"
 )
 
@@ -41,11 +42,13 @@ func Set(key string, data string, expire int) error {
 	defer conn.Close()
 	_, err := conn.Do("SET", key, data)
 	if err != nil {
+		log.Printf("redis set error: %v", err)
 		return err
 	}
 	// expire 以天为单位
 	_, err = conn.Do("EXPIRE", key, expire*24*3600)
 	if err != nil {
+		log.Printf("redis set expire error: %v", err)
 		return err
 	}
 
