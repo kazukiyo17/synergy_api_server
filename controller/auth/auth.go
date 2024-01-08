@@ -101,14 +101,15 @@ func Login(c *gin.Context) {
 		appG.Response(http.StatusOK, e.SUCCESS, nil)
 		return
 	}
-	//c.SetCookie("token", token, 3600*24, "/", "", false, true)
+	//c.SetCookie("token", token, time.Now().Add(24 * time.Hour), "/", setting.ServerSetting.Domain, false, true)
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "token",
 		Value:    token,
 		Path:     "/",
 		Expires:  time.Now().Add(24 * time.Hour),
+		Domain:   setting.ServerSetting.Domain,
 		Secure:   false,
-		HttpOnly: true,
+		HttpOnly: false,
 	})
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }
