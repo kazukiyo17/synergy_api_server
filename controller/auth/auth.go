@@ -11,11 +11,10 @@ import (
 	"github.com/kazukiyo17/synergy_api_server/utils/jwt"
 	"log"
 	"net/http"
-	"time"
 )
 
 type auth struct {
-	Username string `valid:"Required; Alpha; MaxSize(20)"`
+	Username string `valid:"Required; Alpha; MaxSize(20); MinSize(6);"`
 	Password string `valid:"Required; MaxSize(50); MinSize(8); Match(/[A-Za-z0-9]+/)"`
 }
 
@@ -101,15 +100,6 @@ func Login(c *gin.Context) {
 		appG.Response(http.StatusOK, e.SUCCESS, nil)
 		return
 	}
-	//c.SetCookie("token", token, time.Now().Add(24 * time.Hour), "/", setting.ServerSetting.Domain, false, true)
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    token,
-		Path:     "/",
-		Expires:  time.Now().Add(24 * time.Hour),
-		Domain:   setting.ServerSetting.Domain,
-		Secure:   false,
-		HttpOnly: false,
-	})
+	c.SetCookie("token", token, 3*24*3600, "/", setting.ServerSetting.Domain, false, true)
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }

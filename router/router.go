@@ -17,10 +17,11 @@ func SetupRouter() http.Handler {
 	router.Use(Cors())
 
 	router.GET("/ping", func(c *gin.Context) { c.JSON(200, gin.H{"message": "pong"}) })
-	//router.POST("/auth", auth.GetAuth)
-	router.POST("/login", auth.Login)
-	router.POST("/logout", auth.Logout)
-	router.POST("/signup", auth.Signup)
+
+	userApi := router.Group("/user")
+	userApi.POST("/login", auth.Login)
+	userApi.POST("/logout", auth.Logout)
+	userApi.POST("/signup", auth.Signup)
 
 	apiv1 := router.Group("/api/v1")
 	apiv1.Use(jwt.JWT())
