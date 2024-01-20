@@ -2,53 +2,95 @@ package scene
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/kazukiyo17/synergy_api_server/service/scene_service"
+	e "github.com/kazukiyo17/synergy_api_server/common/errcode"
+	"github.com/kazukiyo17/synergy_api_server/common/response"
+	"github.com/kazukiyo17/synergy_api_server/service/scene"
 	"github.com/kazukiyo17/synergy_api_server/utils/jwt"
 	"github.com/spf13/cast"
 	"net/http"
-	"strings"
 )
 
-func Check(c *gin.Context) {
-	token, err := c.Cookie("token")
+func SceneCheck(c *gin.Context) {
+	appG := response.Gin{C: c}
+	username, err := getUsernameFromToken(c)
 	if err != nil {
-		// 鉴权失败
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "auth failed"})
+		appG.Response(http.StatusOK, e.AUTH_CHECK_ERROR, nil)
 		return
 	}
-	claims, err := jwt.ParseToken(token)
-	if claims == nil || err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "auth failed"})
-		return
-	}
-	sceneUrl := c.Query("url")
-	if sceneUrl == "" {
-		c.JSON(-1, gin.H{"message": "url is empty"})
-		return
-	}
-	sceneIdStr := sceneUrl[strings.LastIndex(sceneUrl, "/")+1 : strings.LastIndex(sceneUrl, ".")]
-	// 如果为start.txt, 或end.txt, 直接返回
-	if sceneIdStr == "start" || sceneIdStr == "end" {
-		c.JSON(200, gin.H{"message": "success"})
-		return
-	}
-	// 是否为数字
-	_, err = cast.ToInt64E(sceneIdStr)
+	sceneId := c.Query("sceneId")
+	_, err = cast.ToInt64E(sceneId)
 	if err != nil {
-		c.JSON(-1, gin.H{"message": "sceneId is invalid"})
-		return
-	}
-	// 用户是否有权限
-	isCreator := scene_service.CheckSceneCreator(sceneIdStr, claims.Username)
-	if !isCreator {
-		c.JSON(-1, gin.H{"message": "permission denied"})
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
 		return
 	}
 	// 生成
-	err = scene_service.Check(sceneIdStr, claims.Username)
+	code, sceneInfo := scene.Check(sceneId, username)
+	appG.Response(http.StatusOK, code, sceneInfo)
+}
+
+//func GetStartScene(c *gin.Context) {
+//	appG := response.Gin{C: c}
+//	token, err := c.Cookie("token")
+//	if err != nil {
+//		log.Printf("get token error: %v", err)
+//		appG.Response(http.StatusOK, e.AUTH_CHECK_ERROR, nil)
+//		return
+//	}
+//	claims, err := jwt.ParseToken(token)
+//	if claims == nil || err != nil {
+//		log.Printf("parse token error: %v", err)
+//		appG.Response(http.StatusOK, e.AUTH_CHECK_ERROR, nil)
+//		return
+//	}
+//	username := claims.Username
+//	e, sceneInfo := scene.GetStartScene(username)
+//	if err != nil {
+//		appG.Response(http.StatusOK, e, nil)
+//		return
+//	}
+//	appG.Response(http.StatusOK, e, sceneInfo)
+//}
+
+// InitScene 初始化
+//func InitScene(c *gin.Context) {
+//	appG := response.Gin{C: c}
+//	username := getUsernameFromToken(c)
+//	if username == "" {
+//		appG.Response(http.StatusOK, e.AUTH_CHECK_ERROR, nil)
+//		return
+//	}
+//	scene.GenerateInitScene(username)
+//	appG.Response(http.StatusOK, e.SUCCESS, nil)
+//}
+
+func getUsernameFromToken(c *gin.Context) (string, error) {
+	token, err := c.Cookie("token")
 	if err != nil {
-		c.JSON(-1, gin.H{"message": err.Error()})
+		return "", err
+	}
+	claims, err := jwt.ParseToken(token)
+	if claims == nil || err != nil {
+		return "", err
+	}
+	return claims.Username, nil
+}
+
+func StartScene(c *gin.Context) {
+	appG := response.Gin{C: c}
+	username, err := getUsernameFromToken(c)
+	if err != nil {
+		appG.Response(http.StatusOK, e.AUTH_CHECK_ERROR, nil)
 		return
 	}
-	c.JSON(200, gin.H{"message": "success"})
+	initId := c.Query("chooseId")
+	if initId != "1" && initId != "2" {
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
+	}
+	code, sceneInfo := scene.GetInitScene(username, initId)
+	if err != nil {
+		appG.Response(http.StatusOK, code, nil)
+		return
+	}
+	appG.Response(http.StatusOK, code, sceneInfo)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/kazukiyo17/synergy_api_server/redis_mq"
 	"github.com/kazukiyo17/synergy_api_server/router"
 	"github.com/kazukiyo17/synergy_api_server/setting"
+	"github.com/kazukiyo17/synergy_api_server/utils/flake"
 	"log"
 	"net/http"
 )
@@ -18,6 +19,7 @@ func init() {
 		log.Fatalf("redis setup error: %v", err)
 	}
 	model.Setup()
+	flake.Setup()
 }
 
 func main() {
@@ -25,10 +27,11 @@ func main() {
 	routersInit := router.SetupRouter()
 	server := &http.Server{
 		Handler: routersInit,
-		Addr:    ":443",
+		//setting.ServerSetting.HttpPort,
+		Addr: ":" + setting.ServerSetting.HttpPort,
 	}
 
-	log.Printf("[info] start http server listening 443")
+	log.Printf("[info] start http server listening" + setting.ServerSetting.HttpPort)
 
 	err := server.ListenAndServe()
 	if err != nil {

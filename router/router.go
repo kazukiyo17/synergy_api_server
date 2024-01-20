@@ -26,7 +26,8 @@ func SetupRouter() http.Handler {
 	apiv1 := router.Group("/api/v1")
 	apiv1.Use(jwt.JWT())
 	{
-		apiv1.GET("/game/scene", scene.Check)
+		apiv1.GET("/game/startScene", scene.StartScene)
+		apiv1.GET("/game/scene", scene.SceneCheck)
 	}
 
 	return router

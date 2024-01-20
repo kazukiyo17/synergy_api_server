@@ -3,11 +3,8 @@ package jwt
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kazukiyo17/synergy_api_server/redis"
+	"github.com/kazukiyo17/synergy_api_server/setting"
 	"time"
-)
-
-const (
-	TOKEN_EXPIRE_TIME = 3
 )
 
 var jwtSecret []byte
@@ -20,7 +17,8 @@ type Claims struct {
 
 func GenerateToken(username, password string) (string, error) {
 	nowTime := time.Now()
-	expireTime := nowTime.Add(3 * time.Hour) // 3 hours 过期
+	// 1 week 过期
+	expireTime := nowTime.Add(time.Duration(setting.ServerSetting.AuthExpire) * time.Hour * 24)
 	claims := Claims{
 		username,
 		password,
@@ -48,20 +46,6 @@ func ParseToken(token string) (*Claims, error) {
 		}
 	}
 	return nil, err
-}
-
-func AddToken(username, password string) (token string) {
-	// 生成token
-	token, err := GenerateToken(username, password)
-	if err != nil {
-		panic(err)
-	}
-	// 将token写入redis, 3天过期
-	err = redis.Set(token, username, TOKEN_EXPIRE_TIME)
-	if err != nil {
-		panic(err)
-	}
-	return token
 }
 
 func RemoveToken(token string) (err error) {

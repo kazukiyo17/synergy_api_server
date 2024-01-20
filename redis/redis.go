@@ -37,22 +37,20 @@ func Setup() error {
 }
 
 // Set a key/value
-func Set(key string, data string, expire int) error {
+func Set(key string, data string, expire int) {
 	conn := RedisConn.Get()
 	defer conn.Close()
 	_, err := conn.Do("SET", key, data)
 	if err != nil {
 		log.Printf("redis set error: %v", err)
-		return err
+		return
 	}
 	// expire 以天为单位
 	_, err = conn.Do("EXPIRE", key, expire*24*3600)
 	if err != nil {
 		log.Printf("redis set expire error: %v", err)
-		return err
+		return
 	}
-
-	return nil
 }
 
 // Exists check a key
@@ -69,15 +67,16 @@ func Exists(key string) bool {
 }
 
 // Get get a key
-func Get(key string) (string, error) {
+func Get(key string) string {
 	conn := RedisConn.Get()
 	defer conn.Close()
 
 	reply, err := redis.Bytes(conn.Do("GET", key))
 	if err != nil {
-		return "", err
+		log.Printf("redis get error: %v", err)
+		return ""
 	}
-	return string(reply), nil
+	return string(reply)
 }
 
 // Delete delete a kye

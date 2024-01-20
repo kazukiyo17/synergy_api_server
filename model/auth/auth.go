@@ -6,9 +6,9 @@ import (
 )
 
 type Auth struct {
-	ID       int    `gorm:"primary_key" json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	ID       int    `json:"id" gorm:"type:int(11);primary_key;AUTO_INCREMENT"`
+	Username string `json:"username" gorm:"type:varchar(255);unique_index"`
+	Password string ` json:"password" gorm:"type:varchar(255)"`
 }
 
 // CheckAuth checks if authentication information exists
@@ -50,6 +50,5 @@ func AddAuth(username, password string) error {
 	if err := model.DB.Create(&auth).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
