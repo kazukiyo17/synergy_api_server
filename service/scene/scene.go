@@ -111,7 +111,7 @@ func GetSceneInfo(sceneId, username string) (*Scene, error) {
 		}
 	}
 	sceneInfo, err := model.GetSceneByCreatorAndSceneId(username, sceneId)
-	if err != nil {
+	if err != nil || sceneInfo.COSUrl == "" {
 		return s, err
 	}
 	s.SceneId = strconv.FormatInt(sceneInfo.SceneId, 10)
