@@ -1,6 +1,9 @@
 package redis_mq
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func Produce(chooseId, username string) {
 	msg, err := redisMQClient.PutMsg(chooseId, username)
@@ -8,5 +11,6 @@ func Produce(chooseId, username string) {
 		fmt.Println("PutMsg err:", err)
 		return
 	}
-	fmt.Println("PutMsg:", msg)
+	//log.Printf("-------------------------------------------------")
+	log.Printf( "======================put msg: %v", msg)
 }

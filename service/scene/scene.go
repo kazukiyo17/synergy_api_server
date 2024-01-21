@@ -128,6 +128,7 @@ func GetSceneInfo(sceneId, username string) (*Scene, error) {
 
 // Check 生成孙子剧本
 func Check(sceneId, username string) (int, *Scene) {
+	log.Printf("--------------------------------------------------------")
 	log.Printf("check scene sceneId: %v, username: %v", sceneId, username)
 	// sceneId 是否为数字
 	_, err := cast.ToInt64E(sceneId)
@@ -171,19 +172,19 @@ func GenerateInitScene(username string) {
 	for index, choose := range chooses {
 		sceneId, err := flake.Generate()
 		if err != nil {
-			log.Fatalln(err)
+			log.Printf("generate sceneId error: %v", err)
 			continue
 		}
 		//sceneId := int64(index + 1)
 		err, scene := model.SaveUngeneratedScene(sceneId, int64(0), choose, username, index+1)
 		if err != nil {
-			log.Fatalln(err)
+			log.Printf("save ungenerated scene error: %v", err)
 			continue
 		}
 		// scene 转 json
 		sceneJson, err := json.Marshal(scene)
 		if err != nil {
-			log.Fatalln(err)
+			log.Printf("marshal scene error: %v", err)
 			continue
 		}
 		redis_mq.Produce(strconv.FormatInt(sceneId, 10), string(sceneJson))
@@ -228,14 +229,17 @@ func GetInitScene(username, initId string) (int, *Scene){
 			return e.SUCCESS, &initScene
 		}
 	}
+	// 从数据库读取
 	scene , err := model.GetSceneByCreatorAndInitId(username, cast.ToInt(initId))
-	if err != nil {
+	// 如果数据库没有
+	if err != nil || scene.COSUrl == "" {
 		return e.ERROR, &initScene
 	}
+	// 数据库有，则检查子场景
 	sceneId := strconv.FormatInt(scene.SceneId, 10)
-	//initScene.SceneId = strconv.FormatInt(scene.SceneId, 10)
-	//initScene.Url = scene.COSUrl
-	//initScene.Username = username
+	initScene.SceneId = sceneId
+	initScene.Url = scene.COSUrl
+	initScene.Username = username
 	jsonStr, err := json.Marshal(initScene)
 	if err == nil {
 		log.Printf("redis set ini, scene: %v", jsonStr)
