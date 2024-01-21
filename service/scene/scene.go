@@ -144,6 +144,10 @@ func Check(sceneId, username string) (int, *Scene) {
 		log.Printf("username not match sceneInfo.Username: %v, username: %v", sceneInfo.Username, username)
 		return e.AUTH_CHECK_ERROR, nil
 	}
+	if sceneInfo.Url != "" {
+		log.Printf("scene has generated")
+		return e.NOT_FOUND_SCENE, sceneInfo
+	}
 	// 获取子场景,
 	childScenes, err := getChildScenes(sceneId)
 	if err != nil {

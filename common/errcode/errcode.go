@@ -12,6 +12,7 @@ const (
 	WRONG_USERNAME_OR_PASSWORD = 20002
 
 	// 业务相关
+	NOT_FOUND_SCENE = 30001
 
 )
 
@@ -23,6 +24,7 @@ var msgMap = map[int]string{
 	AUTH_EXPIRED:               "鉴权过期",
 	USERNAME_EXIST:             "用户名已存在",
 	WRONG_USERNAME_OR_PASSWORD: "用户名或密码错误",
+	NOT_FOUND_SCENE:            "未找到场景",
 }
 
 // GetMSG 根据code查对应中文信息
