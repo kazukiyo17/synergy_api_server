@@ -106,6 +106,7 @@ func GetSceneInfo(sceneId, username string) (*Scene, error) {
 		sceneInfo := redis.Get(rKey)
 		err := json.Unmarshal([]byte(sceneInfo), &s)
 		if err == nil {
+			log.Printf("redis get scene: %v", s)
 			return s, err
 		}
 	}
@@ -127,6 +128,7 @@ func GetSceneInfo(sceneId, username string) (*Scene, error) {
 
 // Check 生成孙子剧本
 func Check(sceneId, username string) (int, *Scene) {
+	log.Printf("check scene sceneId: %v, username: %v", sceneId, username)
 	// sceneId 是否为数字
 	_, err := cast.ToInt64E(sceneId)
 	if err != nil {
@@ -138,7 +140,7 @@ func Check(sceneId, username string) (int, *Scene) {
 		return e.ERROR, nil
 	}
 	if sceneInfo.Username != username {
-		log.Fatalln("username not match", sceneInfo.Username, username)
+		log.Printf("username not match sceneInfo.Username: %v, username: %v", sceneInfo.Username, username)
 		return e.AUTH_CHECK_ERROR, nil
 	}
 	// 获取子场景,
@@ -223,7 +225,7 @@ func GetInitScene(username, initId string) (int, *Scene){
 		jsonStr := redis.Get(rKey)
 		err := json.Unmarshal([]byte(jsonStr), &initScene)
 		if err == nil {
-			return e.ERROR, &initScene
+			return e.SUCCESS, &initScene
 		}
 	}
 	scene , err := model.GetSceneByCreatorAndInitId(username, cast.ToInt(initId))

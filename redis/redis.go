@@ -51,6 +51,7 @@ func Set(key string, data string, expire int) {
 		log.Printf("redis set expire error: %v", err)
 		return
 	}
+	log.Printf("redis set key: %v, value: %v", key, data)
 }
 
 // Exists check a key
@@ -66,7 +67,6 @@ func Exists(key string) bool {
 	return exists
 }
 
-// Get get a key
 func Get(key string) string {
 	conn := RedisConn.Get()
 	defer conn.Close()
@@ -76,6 +76,7 @@ func Get(key string) string {
 		log.Printf("redis get error: %v", err)
 		return ""
 	}
+	log.Printf("redis get key: %v, value: %v", key, string(reply) )
 	return string(reply)
 }
 
