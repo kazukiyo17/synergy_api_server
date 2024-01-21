@@ -16,7 +16,7 @@ func init() {
 	redis_mq.Setup()
 	err := redis.Setup()
 	if err != nil {
-		log.Fatalf("redis setup error: %v", err)
+		log.Printf("redis setup error: %v", err)
 	}
 	model.Setup()
 	flake.Setup()

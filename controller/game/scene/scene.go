@@ -67,12 +67,12 @@ func SceneCheck(c *gin.Context) {
 func getUsernameFromToken(c *gin.Context) (string, error) {
 	token, err := c.Cookie("token")
 	if err != nil {
-		log.Fatalf("get token error: %v", err)
+		log.Printf("get token error: %v", err)
 		return "", err
 	}
 	claims, err := jwt.ParseToken(token)
 	if claims == nil || err != nil {
-		log.Fatalf("parse token error: %v", err)
+		log.Printf("parse token error: %v", err)
 		return "", err
 	}
 	log.Printf("getUsernameFromToken username: %v", claims.Username)

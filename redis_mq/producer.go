@@ -6,11 +6,11 @@ import (
 )
 
 func Produce(chooseId, username string) {
-	msg, err := redisMQClient.PutMsg(chooseId, username)
+	_, err := redisMQClient.PutMsg(chooseId, username)
 	if err != nil {
 		fmt.Println("PutMsg err:", err)
 		return
 	}
 	//log.Printf("-------------------------------------------------")
-	log.Printf( "======================put msg: %v", msg)
+	log.Printf( "======================put msg: %v ", chooseId)
 }
