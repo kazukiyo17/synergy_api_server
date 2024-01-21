@@ -17,7 +17,6 @@ type Scene struct {
 	Url      string `json:"url"`
 	SceneId  string `json:"sceneId"`
 	Username string `json:"username"`
-	//IsInit   int    `json:"is_init"`
 }
 
 // hasGenerated 是否已经生成
@@ -139,6 +138,7 @@ func Check(sceneId, username string) (int, *Scene) {
 		return e.ERROR, nil
 	}
 	if sceneInfo.Username != username {
+		log.Fatalln("username not match", sceneInfo.Username, username)
 		return e.AUTH_CHECK_ERROR, nil
 	}
 	// 获取子场景,
@@ -236,6 +236,7 @@ func GetInitScene(username, initId string) (int, *Scene){
 	//initScene.Username = username
 	jsonStr, err := json.Marshal(initScene)
 	if err == nil {
+		log.Printf("redis set ini, scene: %v", jsonStr)
 		redis.Set(rKey, string(jsonStr), setting.ServerSetting.SceneExpire)
 		redis.Set("scene:" + sceneId, string(jsonStr), setting.ServerSetting.SceneExpire)
 	}
