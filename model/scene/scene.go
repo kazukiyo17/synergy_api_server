@@ -56,7 +56,7 @@ func GetSceneBySceneId(sceneId string) (scene *Scene, err error) {
 
 func GetSceneByCreatorAndSceneId(creator, sceneId string) (scene *Scene, err error) {
 	scene = &Scene{}
-	err = model.DB.Model(&Scene{}).Where("creator = ? AND cos_url = ?", creator, sceneId).First(&scene).Error
+	err = model.DB.Model(&Scene{}).Where("creator = ? AND scene_id = ?", creator, sceneId).First(&scene).Error
 	if err != nil {
 		return nil, err
 	}
