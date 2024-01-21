@@ -16,6 +16,7 @@ func JWT() gin.HandlerFunc {
 		var data interface{}
 		code = e.SUCCESS
 		token, err := c.Cookie("token")
+		log.Printf("jwt check token: %v", token)
 
 		if err != nil {
 			log.Printf("get token error: %v", err)
@@ -53,7 +54,7 @@ func JWT() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
+		log.Printf("jwt middleware pass")
 		c.Next()
 	}
 }

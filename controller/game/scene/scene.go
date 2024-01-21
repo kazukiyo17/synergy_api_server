@@ -75,6 +75,7 @@ func getUsernameFromToken(c *gin.Context) (string, error) {
 		log.Printf("parse token error: %v", err)
 		return "", err
 	}
+	log.Printf("getUsernameFromToken username: %v", claims.Username)
 	return claims.Username, nil
 }
 
