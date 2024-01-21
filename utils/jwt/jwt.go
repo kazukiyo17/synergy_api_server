@@ -11,7 +11,6 @@ var jwtSecret []byte
 
 type Claims struct {
 	Username string `json:"username"`
-	Password string `json:"password"`
 	jwt.StandardClaims
 }
 
@@ -21,10 +20,8 @@ func GenerateToken(username, password string) (string, error) {
 	expireTime := nowTime.Add(time.Duration(setting.ServerSetting.AuthExpire) * time.Hour * 24)
 	claims := Claims{
 		username,
-		password,
 		jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
-			//Issuer:    "gin-blog",
 		},
 	}
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

@@ -105,7 +105,6 @@ func GetSceneInfo(sceneId, username string) (*Scene, error) {
 	rKey := "scene:" + sceneId
 	if redis.Exists(rKey) {
 		sceneInfo := redis.Get(rKey)
-		//var s = &Scene{}
 		err := json.Unmarshal([]byte(sceneInfo), &s)
 		if err == nil {
 			return s, err

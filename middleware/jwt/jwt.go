@@ -6,6 +6,7 @@ import (
 	e "github.com/kazukiyo17/synergy_api_server/common/errcode"
 	auth "github.com/kazukiyo17/synergy_api_server/service/auth"
 	jwt2 "github.com/kazukiyo17/synergy_api_server/utils/jwt"
+	"log"
 	"net/http"
 )
 
@@ -13,19 +14,20 @@ func JWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var code int
 		var data interface{}
-
 		code = e.SUCCESS
-		//token := c.Query("token")
-		// 从cookie中获取token
 		token, err := c.Cookie("token")
+
 		if err != nil {
+			log.Printf("get token error: %v", err)
 			code = e.AUTH_CHECK_ERROR
 		}
 		if token == "" {
-			code = e.INVALID_PARAMS
+			log.Printf("token is empty")
+			code = e.AUTH_CHECK_ERROR
 		} else {
-			_, err := jwt2.ParseToken(token)
+			_, err = jwt2.ParseToken(token)
 			if err != nil {
+				log.Printf("parse token error: %v", err)
 				switch err.(*jwt.ValidationError).Errors {
 				case jwt.ValidationErrorExpired:
 					code = e.AUTH_EXPIRED
@@ -38,12 +40,6 @@ func JWT() gin.HandlerFunc {
 				if !isLogin {
 					code = e.AUTH_EXPIRED
 				}
-				//rKey := "token:" + token
-				//// Check if token exists in Redis
-				//exists := redis.Exists(rKey)
-				//if !exists {
-				//	code = e.ERROR_AUTH_CHECK_TOKEN_TIMEOUT
-				//}
 			}
 		}
 

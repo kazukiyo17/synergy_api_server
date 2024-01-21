@@ -53,17 +53,12 @@ func Signup(c *gin.Context) {
 
 func Login(c *gin.Context) {
 	appG := response.Gin{C: c}
-	// 获取参数
-	//username := c.PostForm("username")
-	//password := c.PostForm("password")
 	var service authService.Auth
 	err := c.BindJSON(&service)
 	if err != nil {
 		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
 		return
 	}
-	// 登录
-	//service := authService.Auth{Username: username, Password: password}
 	res, token := service.Login()
 	c.SetCookie("token", token, 3*24*3600, "/", setting.ServerSetting.Domain, false, false)
 	appG.Response(http.StatusOK, res, nil)

@@ -7,6 +7,7 @@ import (
 	"github.com/kazukiyo17/synergy_api_server/service/scene"
 	"github.com/kazukiyo17/synergy_api_server/utils/jwt"
 	"github.com/spf13/cast"
+	"log"
 	"net/http"
 )
 
@@ -66,10 +67,12 @@ func SceneCheck(c *gin.Context) {
 func getUsernameFromToken(c *gin.Context) (string, error) {
 	token, err := c.Cookie("token")
 	if err != nil {
+		log.Printf("get token error: %v", err)
 		return "", err
 	}
 	claims, err := jwt.ParseToken(token)
 	if claims == nil || err != nil {
+		log.Printf("parse token error: %v", err)
 		return "", err
 	}
 	return claims.Username, nil
@@ -78,7 +81,7 @@ func getUsernameFromToken(c *gin.Context) (string, error) {
 func StartScene(c *gin.Context) {
 	appG := response.Gin{C: c}
 	username, err := getUsernameFromToken(c)
-	if err != nil {
+	if err != nil || username == "" {
 		appG.Response(http.StatusOK, e.AUTH_CHECK_ERROR, nil)
 		return
 	}

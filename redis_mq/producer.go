@@ -10,11 +10,3 @@ func Produce(chooseId, username string) {
 	}
 	fmt.Println("PutMsg:", msg)
 }
-
-func Check(chooseId string) bool {
-	msg, err := redisMQClient.CheckPeddingList(chooseId)
-	if err != nil {
-		return false
-	}
-	return msg
-}

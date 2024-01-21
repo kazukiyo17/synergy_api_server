@@ -45,8 +45,17 @@ CREATE TABLE `background_imgs` (
     `cos_url` VARCHAR(255),
     `scene_id` BIGINT,
     `prompt` VARCHAR(255),
-    INDEX idx_background_imgs_img_id (`img_id`),
+    UNIQUE INDEX idx_background_imgs_img_id (`img_id`),
     INDEX idx_background_imgs_scene_id (`scene_id`)
+);
+```
+
+```mysql
+CREATE TABLE `auth` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `username` varchar(255) NOT NULL UNIQUE,
+    `password` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
 );
 ```
 
