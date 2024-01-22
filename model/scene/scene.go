@@ -28,7 +28,7 @@ func GetCosUrlBySceneId(sceneId string) (cosUrl string, err error) {
 
 func GetSceneByParentSceneId(parentSceneId string) ([]*Scene, error) {
 	scenes := make([]*Scene, 0)
-	err := model.DB.Model(&Scene{}).Where("parent_scene_id = ?", parentSceneId).Find(&scenes).Error
+	err := model.DB.Model(&Scene{}).Where("parent_scene_id = ? and cos_url = ''", parentSceneId).Find(&scenes).Error
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func SaveUngeneratedScene(sceneId, parentSceneId int64, choose, username string,
 		ChooseContent: choose,
 		Creator:       username,
 		ParentSceneId: parentSceneId,
-		IsInit: isInit,
+		IsInit:        isInit,
 	}
 	err := model.DB.Model(&Scene{}).Create(&scene).Error
 	return err, scene

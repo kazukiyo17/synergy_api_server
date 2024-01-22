@@ -69,7 +69,7 @@ type Scene struct {
 //	return childSceneIds, nil
 //}
 
-func getChildScenes(sceneId string) ([]*model.Scene, error) {
+func getUngeneratedChildScenes(sceneId string) ([]*model.Scene, error) {
 	childScenes := make([]*model.Scene, 0)
 	// 从redis中获取子场景
 	rKey := "childs:" + sceneId
@@ -149,7 +149,7 @@ func Check(sceneId, username string) (int, *Scene) {
 		return e.NOT_FOUND_SCENE, sceneInfo
 	}
 	// 获取子场景,
-	childScenes, err := getChildScenes(sceneId)
+	childScenes, err := getUngeneratedChildScenes(sceneId)
 	if err != nil {
 		return e.ERROR, nil
 	}
