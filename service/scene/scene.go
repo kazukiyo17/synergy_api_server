@@ -151,7 +151,7 @@ func Check(sceneId, username string) (int, *Scene) {
 	// 获取子场景,
 	childScenes, err := getChildScenes(sceneId)
 	if err != nil {
-		return e.ERROR,	nil
+		return e.ERROR, nil
 	}
 	// 生成子场景
 	for _, childScene := range childScenes {
@@ -164,7 +164,6 @@ func Check(sceneId, username string) (int, *Scene) {
 			continue
 		}
 		redis_mq.Produce(strconv.FormatInt(childScene.SceneId, 10), string(jsonStr))
-		//produceChildScene(strconv.FormatInt(childScene.SceneId, 10), string(jsonStr))
 	}
 	return e.SUCCESS, sceneInfo
 }
@@ -222,35 +221,35 @@ func GenerateInitScene(username string) {
 //
 //}
 
-
-func GetInitScene(username, initId string) (int, *Scene){
+func GetInitScene(username, initId string) (int, *Scene) {
 	rKey := "init:" + username + initId
 	var initScene = Scene{}
 	if redis.Exists(rKey) {
 		jsonStr := redis.Get(rKey)
 		err := json.Unmarshal([]byte(jsonStr), &initScene)
-		if err == nil {
-			return e.SUCCESS, &initScene
+		if err != nil {
+			return e.ERROR, &initScene
 		}
+	} else {
+		// 从数据库读取
+		scene, err := model.GetSceneByCreatorAndInitId(username, cast.ToInt(initId))
+		// 如果数据库没有
+		if err != nil || scene.COSUrl == "" {
+			return e.ERROR, &initScene
+		}
+		// 数据库有，则检查子场景
+		sceneId := strconv.FormatInt(scene.SceneId, 10)
+		initScene.SceneId = sceneId
+		initScene.Url = scene.COSUrl
+		initScene.Username = username
 	}
-	// 从数据库读取
-	scene , err := model.GetSceneByCreatorAndInitId(username, cast.ToInt(initId))
-	// 如果数据库没有
-	if err != nil || scene.COSUrl == "" {
-		return e.ERROR, &initScene
-	}
-	// 数据库有，则检查子场景
-	sceneId := strconv.FormatInt(scene.SceneId, 10)
-	initScene.SceneId = sceneId
-	initScene.Url = scene.COSUrl
-	initScene.Username = username
 	jsonStr, err := json.Marshal(initScene)
 	if err == nil {
 		log.Printf("redis set ini, scene: %v", jsonStr)
 		redis.Set(rKey, string(jsonStr), setting.ServerSetting.SceneExpire)
-		redis.Set("scene:" + sceneId, string(jsonStr), setting.ServerSetting.SceneExpire)
+		redis.Set("scene:"+initScene.SceneId, string(jsonStr), setting.ServerSetting.SceneExpire)
 	}
 	// 生成
-	code, sceneInfo := Check(sceneId, username)
+	code, sceneInfo := Check(initScene.SceneId, username)
 	return code, sceneInfo
 }
